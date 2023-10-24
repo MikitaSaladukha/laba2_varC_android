@@ -13,6 +13,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -28,14 +30,13 @@ public class MainActivity extends AppCompatActivity {
     private double sum;
     private Button buttonFormula1;
     private Button buttonFormula2;
-    private Button buttonMemory1;
-    private Button buttonMemory2;
-    private Button buttonMemory3;
     private Button buttonMemoryClear;
     private Button buttonMemoryPlus;
     private Button buttonSolve;
     private Button buttonClear;
-
+    private CheckBox checkMemory1;
+    private CheckBox checkMemory2;
+    private CheckBox checkMemory3;
     private ImageView formulaPic;
 
     private EditText editX;
@@ -44,22 +45,23 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView resultText;
     private TextView memorySumText;
+    private int checkedCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        isFormula1 = false;
-
+        isFormula1 = true;
         buttonFormula1 = findViewById(R.id.buttonFormula1);
         buttonFormula2 = findViewById(R.id.buttonFormula2);
-        buttonMemory1 = findViewById(R.id.buttonMemory1);
-        buttonMemory2 = findViewById(R.id.buttonMemory2);
-        buttonMemory3 = findViewById(R.id.buttonMemory3);
         buttonMemoryClear = findViewById(R.id.buttonMemoryClear);
         buttonMemoryPlus = findViewById(R.id.buttonMemoryPlus);
         buttonSolve = findViewById(R.id.buttonSolve);
         buttonClear = findViewById(R.id.buttonClear);
+
+        checkMemory1 = findViewById(R.id.checkMemory1);
+        checkMemory2 = findViewById(R.id.checkMemory2);
+        checkMemory3 = findViewById(R.id.checkMemory3);
 
         formulaPic = findViewById(R.id.formulaPic);
 
@@ -69,6 +71,38 @@ public class MainActivity extends AppCompatActivity {
 
         resultText = findViewById(R.id.resultText);
         memorySumText = findViewById(R.id.memorySumText);
+
+        CheckBox[] checkBoxes = {checkMemory1, checkMemory2, checkMemory3};
+        CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    checkedCount++;
+                } else {
+                    checkedCount--;
+                }
+                if (checkedCount > 1) {
+                    buttonView.setChecked(false);
+                    Toast.makeText(MainActivity.this, "Вы можете выбрать только одну память", Toast.LENGTH_SHORT).show();
+                } else {
+                    if (checkMemory1.isChecked()) {
+                        memorySumText.setText(Double.toString(memory1));
+                    }
+                    if (checkMemory2.isChecked()) {
+                        memorySumText.setText(Double.toString(memory2));
+                    }
+                    if (checkMemory3.isChecked()) {
+                        memorySumText.setText(Double.toString(memory3));
+                    }
+                }
+            }
+        };
+
+        for (CheckBox checkBox : checkBoxes) {
+            checkBox.setOnCheckedChangeListener(listener);
+        }
+
+
 
         buttonFormula1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,21 +127,70 @@ public class MainActivity extends AppCompatActivity {
         buttonSolve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                double x = Double.parseDouble(editX.getText().toString());
-                double y = Double.parseDouble(editY.getText().toString());
-                double z = Double.parseDouble(editZ.getText().toString());
+                if(editX.getText().toString().equals("") || editY.getText().toString().equals("") || editZ.getText().toString().equals("")){
+                    Toast.makeText(MainActivity.this, "Введите X Y Z", Toast.LENGTH_SHORT).show();
+                }else{
                 if(isFormula1){
-                    sum = formula1(x,y,z);
+                    sum = formula1(Double.parseDouble(editX.getText().toString()),
+                            Double.parseDouble(editY.getText().toString()),
+                            Double.parseDouble(editZ.getText().toString()));
                 } else {
-                    sum = formula2(x,y,z);
+                    sum = formula2(Double.parseDouble(editX.getText().toString()),
+                            Double.parseDouble(editY.getText().toString()),
+                            Double.parseDouble(editZ.getText().toString()));
                 }
-
+                resultText.setText(Double.toString(sum));
+                }
             }
         });
+
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resultText.setText("0");
+                sum = 0;
+                editX.setText("");
+                editY.setText("");
+                editZ.setText("");
+            }
+        });
+
+        buttonMemoryClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                memory1 = 0;
+                memory2 = 0;
+                memory3 = 0;
+                memorySumText.setText("0");
+                checkMemory1.setChecked(false);
+                checkMemory2.setChecked(false);
+                checkMemory3.setChecked(false);
+            }
+        });
+
+        buttonMemoryPlus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (sum != 0) {
+                    if (checkMemory1.isChecked()) {
+                        memory1 += sum;
+                        memorySumText.setText(Double.toString(memory1));
+                    }
+                    if (checkMemory2.isChecked()) {
+                        memory2 += sum;
+                        memorySumText.setText(Double.toString(memory2));
+                    }
+                    if (checkMemory3.isChecked()) {
+                        memory3 += sum;
+                        memorySumText.setText(Double.toString(memory3));
+                    }
+                }
+            }
+        });
+
     }
 
     public Double formula1(Double x, Double y, Double z) {
-        Toast.makeText(this, "y не может быть меньше нуля", Toast.LENGTH_SHORT).show();
         return (sin(log(y) + sin(PI * y * y)) * pow(x * x + sin(z) + pow(E, cos(z)), 0.25));
     }
     public Double formula2(Double x, Double y, Double z) {
